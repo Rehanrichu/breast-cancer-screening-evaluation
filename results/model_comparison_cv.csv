@@ -1,0 +1,6 @@
+model,accuracy_mean,accuracy_sd,roc_auc_mean,roc_auc_sd,sensitivity_mean,sensitivity_sd,specificity_mean,specificity_sd,precision_mean,precision_sd
+Majority-class baseline,0.6264,0.0,0.5,0.0,0.0,0.0,1.0,0.0,0.0,0.0
+Logistic regression,0.9745,0.0151,0.9946,0.0065,0.9529,0.0294,0.9874,0.0164,0.979,0.027
+SVM (RBF),0.9714,0.0185,0.9941,0.0066,0.9482,0.0401,0.9853,0.0173,0.9754,0.0282
+Random forest,0.956,0.0198,0.9889,0.0074,0.9271,0.0434,0.9733,0.0238,0.9557,0.0379
+Gradient boosting,0.967,0.0165,0.991,0.0078,0.94,0.0403,0.9832,0.0139,0.9714,0.0229

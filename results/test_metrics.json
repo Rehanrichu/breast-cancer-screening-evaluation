@@ -1,0 +1,135 @@
+{
+  "selected_model": "Logistic regression",
+  "threshold": 0.20737254302394317,
+  "target_sensitivity": 0.98,
+  "n_train": 455,
+  "n_test": 114,
+  "n_test_malignant": 42,
+  "default_0.5": {
+    "threshold": 0.5,
+    "confusion_matrix [[TN, FP], [FN, TP]]": [
+      [
+        71,
+        1
+      ],
+      [
+        3,
+        39
+      ]
+    ],
+    "accuracy": 0.9649122807017544,
+    "sensitivity": 0.9285714285714286,
+    "specificity": 0.9861111111111112,
+    "precision_ppv": 0.975,
+    "npv": 0.9594594594594594,
+    "roc_auc": 0.996031746031746,
+    "pr_auc": 0.994273631904294,
+    "bootstrap_95ci": {
+      "accuracy": [
+        0.9298245614035088,
+        0.9912280701754386
+      ],
+      "sensitivity": [
+        0.8409090909090909,
+        1.0
+      ],
+      "specificity": [
+        0.95159307244844,
+        1.0
+      ],
+      "roc_auc": [
+        0.98625678119349,
+        1.0
+      ]
+    }
+  },
+  "tuned": {
+    "threshold": 0.20737254302394317,
+    "confusion_matrix [[TN, FP], [FN, TP]]": [
+      [
+        69,
+        3
+      ],
+      [
+        1,
+        41
+      ]
+    ],
+    "accuracy": 0.9649122807017544,
+    "sensitivity": 0.9761904761904762,
+    "specificity": 0.9583333333333334,
+    "precision_ppv": 0.9318181818181818,
+    "npv": 0.9857142857142858,
+    "roc_auc": 0.996031746031746,
+    "pr_auc": 0.994273631904294,
+    "bootstrap_95ci": {
+      "accuracy": [
+        0.9298245614035088,
+        0.9912280701754386
+      ],
+      "sensitivity": [
+        0.9209992887624466,
+        1.0
+      ],
+      "specificity": [
+        0.9076562499999999,
+        1.0
+      ],
+      "roc_auc": [
+        0.98625678119349,
+        1.0
+      ]
+    }
+  },
+  "top_features_permutation": {
+    "worst symmetry": 0.0102,
+    "worst texture": 0.0101,
+    "worst concavity": 0.0077,
+    "worst concave points": 0.003,
+    "mean concave points": 0.003
+  },
+  "ppv_if_prevalence_were": {
+    "1%": 0.191,
+    "5%": 0.552,
+    "37%": 0.933
+  },
+  "robustness_across_splits": {
+    "n_splits": 30,
+    "sensitivity": {
+      "mean": 0.9802,
+      "sd": 0.0217,
+      "min": 0.9286,
+      "max": 1.0
+    },
+    "specificity": {
+      "mean": 0.9093,
+      "sd": 0.0419,
+      "min": 0.8333,
+      "max": 0.9722
+    },
+    "accuracy": {
+      "mean": 0.9354,
+      "sd": 0.0244,
+      "min": 0.886,
+      "max": 0.9825
+    },
+    "roc_auc": {
+      "mean": 0.995,
+      "sd": 0.0051,
+      "min": 0.9825,
+      "max": 1.0
+    },
+    "false_negatives": {
+      "mean": 0.8333,
+      "sd": 0.9129,
+      "min": 0.0,
+      "max": 3.0
+    },
+    "false_positives": {
+      "mean": 6.5333,
+      "sd": 3.0141,
+      "min": 2.0,
+      "max": 12.0
+    }
+  }
+}
