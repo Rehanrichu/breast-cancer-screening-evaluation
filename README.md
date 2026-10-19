@@ -1,96 +1,141 @@
-# Breast Cancer Classification and Evaluation
+# Breast Cancer Screening — careful evaluation of a classifier
 
-I built this project to explore a question that matters as much as model accuracy: **how much should we trust the result of a machine-learning evaluation?**
+One-sentence summary: a small, reproducible study that trains and evaluates classifiers on the scikit-learn Wisconsin Diagnostic Breast Cancer dataset with an emphasis on trustworthy evaluation (split-first design, no preprocessing leakage, thresholding for sensitivity, bootstrap confidence intervals, and robustness checks).
 
-The project uses scikit-learn's Wisconsin Diagnostic Breast Cancer dataset to classify tumours as malignant or benign from 30 numeric measurements of cell nuclei. I focused on a careful evaluation process: comparing several models, choosing a decision threshold using training data only, reporting uncertainty, and checking how results change when the train/test split changes.
+This is an educational project to demonstrate careful evaluation practices for binary classifiers in a screening-like setting. It is not a medical device and must not be used to diagnose, screen, or guide treatment for anyone.
 
-> **Educational project only. This is not a medical device and must not be used to diagnose, screen, or guide treatment for anyone.**
+---
 
-## What the project does
+## Quick start
 
-1. Loads the 569-row, 30-feature benchmark included with scikit-learn.
-2. Defines **malignant** as the positive class, so sensitivity represents the fraction of malignant cases identified by the model.
-3. Creates a stratified train/test split before model selection and evaluation.
-4. Compares a majority-class baseline with logistic regression, an RBF support-vector machine, random forest, and gradient boosting using repeated stratified cross-validation on the training data.
-5. Keeps scaling inside model pipelines, reducing the risk of preprocessing leakage between folds.
-6. Chooses a threshold from out-of-fold training predictions to target 98% sensitivity, then evaluates the selected model on the held-out test set.
-7. Reports bootstrap confidence intervals, confusion matrices, calibration and permutation-importance plots, and results over 30 additional train/test splits.
-8. Estimates how positive predictive value changes under lower assumed prevalence. These are calculations, not estimates of clinical performance.
-
-## Main findings from the saved run
-
-| Measure | Saved result |
-|---|---:|
-| Dataset size | 569 samples, 30 features |
-| Selected model | Logistic regression |
-| Training cross-validation ROC-AUC | 0.995 (mean) |
-| Decision threshold chosen from training out-of-fold predictions | 0.207 |
-| Accuracy on the first held-out split | 96.5% |
-| Mean accuracy over 30 additional splits | 93.5% ± 2.4 percentage points |
-| Mean sensitivity over 30 additional splits | 98.0% ± 2.2 percentage points |
-| Mean specificity over 30 additional splits | 90.9% ± 4.2 percentage points |
-
-The first split scored better than the average of the repeated splits, especially on specificity. That is one reason I do not treat a single test score as the complete story. The 30 test splits overlap and all come from the same dataset; they are **not** independent cohorts or external validation.
-
-At the first split's tuned operating point (sensitivity 0.976, specificity 0.958), the saved report calculates positive predictive value (PPV) of about 93%, 55%, and 19% at assumed prevalences of 37%, 5%, and 1%. This illustrates why a high score on this case-enriched dataset should not be read as proof that the model would work as a population screening test.
-
-## How to run it
-
-Use Python 3.10 or newer. The saved results were generated with Python 3.12; small numerical differences can occur under other library versions.
+Requirements: Python 3.10+ (the included run used Python 3.12). Install the runtime requirements:
 
 ```bash
 python -m pip install -r requirements.txt
+```
+
+Run the full analysis (writes figures and JSON into `results/`):
+
+```bash
 python screening.py
 ```
 
-The full run compares models, creates plots, evaluates the held-out split, and repeats the procedure over 30 additional splits. It writes outputs into `results/`, replacing files there. To preserve the saved results, choose a different output directory:
+Run and preserve the included example results (does not overwrite `results/`):
 
 ```bash
 python screening.py --outdir results-local
 ```
 
-A quicker run for checking that the script works is:
+Do a quick smoke check (fast, uses reduced CV/bootstrap settings):
 
 ```bash
-python screening.py --robustness 2 --outdir results-smoke
-python check.py
-python -m unittest -v
+python screening.py --robustness 2 --outdir results-smoke --cv-folds 3 --cv-repeats 1 --bootstrap-samples 100
+python check.py               # runs the smoke check and basic assertions
+python -m unittest -v         # unit tests for helpers
 ```
 
-`check.py` performs a smoke run in a temporary directory and checks core output properties. `test_screening.py` contains focused tests for the metric and threshold helpers. The GitHub Actions workflow runs these checks on pushes and pull requests.
+---
 
-## Repository map
+## What you’ll get
 
-```text
+The script:
+- Compares a trivial baseline with Logistic Regression, RBF SVM, Random Forest and HistGradientBoosting using repeated stratified cross-validation on the training set.
+- Selects an operating probability threshold from out‑of‑fold training predictions to meet a target sensitivity (default 98%) and evaluates the chosen model once on a held-out test set.
+- Reports bootstrap 95% confidence intervals, confusion matrices (default 0.5 and tuned threshold), calibration and permutation-importance plots.
+- Repeats the entire procedure over multiple random train/test splits (`--robustness`) to show how results vary with the data split.
+
+Saved example outputs (see `results/README.md`) include:
+- model_comparison_cv.csv
+- test_metrics.json
+- roc_out_of_fold.png, calibration.png
+- confusion_matrix_default_0.5.png, confusion_matrix_tuned.png
+- permutation_importance.png
+- robustness_repeated_splits.csv and PNG
+
+---
+
+## Main findings (from the included saved run)
+
+- Dataset: 569 samples, 30 numeric features (scikit-learn builtin)
+- Selected model (example run): Logistic regression
+- Example tuned threshold: ~0.21
+- Example held-out-test accuracy / sensitivity / specificity: shown in `results/test_metrics.json` (the included run reports high sensitivity—see saved results for exact numbers)
+- Note: the saved run also computes PPV for assumed prevalences (1%, 5%, dataset prevalence) to show how predictive value changes in lower-prevalence settings.
+
+---
+
+## Why this design?
+
+Key choices in screening.py:
+- Split the test set first and touch it only once, after model selection and thresholding on training data.
+- Keep all preprocessing inside sklearn Pipelines so cross-validation is not contaminated by preprocessing leakage.
+- Choose thresholds from out‑of‑fold predictions to target sensitivity (missing cancers is a high-cost error).
+- Report bootstrap confidence intervals because the held-out test set is small.
+- Repeat the whole split/threshold/test flow across many random splits to reveal sensitivity to the train/test split.
+
+For more design notes and trade-offs see: [docs/DESIGN_NOTES.md](https://github.com/Rehanrichu/breast-cancer-screening-evaluation/blob/main/docs/DESIGN_NOTES.md).
+
+---
+
+## How it’s organized
+
+Top-level tree:
+
+```
 .
 ├── screening.py                 # End-to-end modelling and evaluation
 ├── check.py                     # Reproducible smoke checks
-├── test_screening.py            # Unit tests for core helpers
+├── test_screening.py            # Unit tests for metric & threshold helpers
 ├── requirements.txt             # Python dependencies
-├── results/                     # Saved tables, metrics and figures
+├── results/                     # Saved tables, metrics and figures (example run)
 ├── docs/
-│   ├── DESIGN_NOTES.md           # Method choices, trade-offs and limitations
-│   └── REFERENCES.md             # Dataset and library references
-└── .github/workflows/checks.yml  # Automated checks on GitHub
+│   ├── DESIGN_NOTES.md          # Method choices, trade-offs and limitations
+│   └── REFERENCES.md            # Dataset and library references
+└── .github/workflows/checks.yml # GitHub Actions for CI smoke checks
 ```
 
-See `results/README.md` for a guide to each saved output.
+How it fits together: screening.py is the main script. It loads the scikit-learn dataset, does a single split-off test set, runs repeated CV on the training set to compare models, computes out-of-fold probabilities to choose a threshold that meets the target sensitivity, fits the chosen model on all training data and evaluates once on the held-out test set, and produces plots and a JSON report. `check.py` runs a fast end-to-end smoke test in a temp directory and asserts expected outputs.
 
-## Limitations and next steps
+---
 
-- The dataset is a well-known benchmark from one source, not a prospective screening population.
-- The dataset's malignant-case prevalence is about 37%, much higher than in many general screening settings.
-- Model choice and threshold selection use the training data; nested cross-validation could better account for selection uncertainty.
-- The 30 repeated splits overlap and do not measure uncertainty on a new hospital or population.
-- Calibration is only a limited visual check, and several features are correlated, which can dilute permutation importance.
-- There is no external validation, demographic fairness analysis, prospective evaluation, or clinical review.
+## Reproducibility & testing
 
-A sensible next step would be nested cross-validation, followed by external validation on an appropriately governed independent dataset. None of those steps would by itself make a model ready for clinical use.
+- Deterministic seeds are used (SEED = 42 by default) but randomness remains when you change seeds or increase the number of robustness repeats.
+- Use `check.py` to run the smoke test. The full study uses larger numbers of CV repeats and bootstrap samples; the smoke checks run with smaller settings to keep CI time low.
+- Unit tests: `python -m unittest -v` runs `test_screening.py` which validates metric helpers and thresholding logic.
+
+---
+
+## Limitations and responsible use
+
+- This dataset is a single, well-known benchmark; it does not represent a prospective screening population.
+- Prevalence in the dataset (~37% malignant) is much higher than typical screening contexts; PPV will be lower at real-world prevalences.
+- The study demonstrates evaluation practices but does not substitute for external validation, demographic fairness analysis, clinical review, or prospective testing.
+- Do not use models or thresholds produced here for patient care.
+
+---
+
+## Extending / experiments to try
+
+- Use nested cross‑validation to better account for model/threshold selection uncertainty.
+- Add external validation on an independent dataset under appropriate governance.
+- Add demographic subgroup evaluation and fairness metrics.
+- Replace permutation importance with SHAP analyses to get per-sample explanations.
+
+---
 
 ## AI assistance
 
-AI tools were used to assist with parts of the code and documentation. The project should be judged on the code, the reproducible checks, the results, and the author's ability to explain the decisions and limitations honestly.
+AI tools were used to assist with parts of the code and documentation; judge the project on the code, reproducible checks, results, and the author's explanations.
 
-## License
+---
 
-This project is released under the MIT License. See `LICENSE`.
+## License & citation
+
+This project is released under the MIT License. See `LICENSE`. If you reuse the code or results in academic work, cite the repository and describe that the experiments were done on the scikit-learn Wisconsin Diagnostic Breast Cancer dataset.
+
+---
+
+## Contact
+
+Maintainer: Rehanrichu (GitHub). Open issues or pull requests for feature requests, corrections, or to propose reproducibility improvements.
